@@ -1,0 +1,11 @@
+.idea/
+
+build-cmd/
+
+go.mod
+go.sum
+
+service_account.json
+coverage.txt
+*.sh
+*.yml

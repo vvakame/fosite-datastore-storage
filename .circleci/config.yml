@@ -1,0 +1,84 @@
+version: 2
+jobs:
+  lib_build:
+    working_directory: /go/src/github.com/vvakame/fosite-datastore-storage
+    docker:
+      - image: golang:1.12
+        environment:
+          GO111MODULE: "on"
+          DATASTORE_EMULATOR_HOST: "localhost:8081"
+          DATASTORE_PROJECT_ID:    "fosite-datastore-storage"
+      - image: google/cloud-sdk:244.0.0
+        command: ['gcloud', '--project=fosite-datastore-storage', 'beta', 'emulators', 'datastore', 'start', '--host-port=localhost:8081', '--no-store-on-disk', '--consistency=1.0']
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - gomod-cache-{{ checksum "v2/go.sum" }}
+      - run:
+          name: setup
+          command: ./setup.sh
+          working_directory: ./v2
+      - save_cache:
+          key: gomod-cache-{{ checksum "v2/go.sum" }}
+          paths:
+            - /go/pkg/mod
+      - run:
+          name: run tests
+          command: ./test.sh
+          working_directory: ./v2
+
+  example_build:
+    working_directory: /go/src/github.com/vvakame/fosite-datastore-storage
+    docker:
+      - image: golang:1.12
+        environment:
+          GO111MODULE: "on"
+          DATASTORE_EMULATOR_HOST: "localhost:8081"
+          DATASTORE_PROJECT_ID:    "fosite-datastore-storage"
+      - image: google/cloud-sdk:244.0.0
+        command: ['gcloud', '--project=fosite-datastore-storage', 'beta', 'emulators', 'datastore', 'start', '--host-port=localhost:8081', '--no-store-on-disk', '--consistency=1.0']
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - gomod-cache-{{ checksum "example/go.sum" }}
+      - run:
+          name: setup
+          command: ./setup.sh
+          working_directory: ./example
+      - save_cache:
+          key: gomod-cache-{{ checksum "example/go.sum" }}
+          paths:
+            - /go/pkg/mod
+      - run:
+          name: run tests
+          command: ./test.sh
+          working_directory: ./example
+
+  deploy:
+    working_directory: /go/src/github.com/vvakame/fosite-datastore-storage
+    docker:
+      - image: google/cloud-sdk:244.0.0
+    steps:
+      - deploy:
+          name: Deploy to Cloud Run
+          command: |
+            ./setup.sh
+            ./deploy.sh
+          working_directory: ./example
+
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - lib_build
+      - example_build
+      - deploy:
+          requires:
+            - lib_build
+            - example_build
+          filters:
+            branches:
+              only:
+                - master

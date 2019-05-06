@@ -1,0 +1,8 @@
+.idea/
+
+build-cmd/
+
+service_account.json
+coverage.txt
+
+vendor/

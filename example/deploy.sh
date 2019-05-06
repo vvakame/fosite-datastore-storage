@@ -11,8 +11,8 @@ if [ ! -f ./service_account.json ]; then
   gcloud auth activate-service-account --key-file ./service_account.json
 fi
 
-gcloud builds submit --tag gcr.io/${APPLICATION}/fosite-datastore-storage
-gcloud beta run deploy fosite-datastore-storage \
+gcloud --project $APPLICATION builds submit --tag gcr.io/${APPLICATION}/fosite-datastore-storage
+gcloud --project $APPLICATION beta run deploy fosite-datastore-storage \
   --allow-unauthenticated \
   --image gcr.io/${APPLICATION}/fosite-datastore-storage \
   --region=us-central1 \
